@@ -198,6 +198,20 @@ contract MultiSigWallet {
         _;
     }
 
+    modifier notNull(address _address) {
+        if (_address == address(0))
+            revert("null address");
+        _;
+    }
+
+    modifier validRequirement(uint ownerCount, uint _required) {
+        if (_required > ownerCount
+            || _required == 0
+            || ownerCount == 0)
+            revert("invalid requirement");
+        _;
+    }
+
     /// @dev Allows to replace an owner with a new owner.
     /// @param owner Address of owner to be replaced.
     /// @param owner Address of new owner.
@@ -215,5 +229,46 @@ contract MultiSigWallet {
         }
         isOwner[owner] = false;
         isOwner[newOwner] = true;
+    }
+
+    /// @dev Allows to add a new owner. Transaction has to be sent by wallet.
+    /// @param owner Address of new owner.
+    function addOwner(address owner)
+        public
+        onlyWallet
+        ownerDoesNotExist(owner)
+        notNull(owner)
+        validRequirement(owners.length + 1, numConfirmationsRequired)
+    {
+        isOwner[owner] = true;
+        owners.push(owner);
+    }
+
+    /// @dev Allows to remove an owner. Transaction has to be sent by wallet.
+    /// @param owner Address of owner.
+    function removeOwner(address owner)
+        public
+        onlyWallet
+        ownerExists(owner)
+    {
+        isOwner[owner] = false;
+        for (uint i=0; i<owners.length - 1; i++) {
+            if (owners[i] == owner) {
+                owners[i] = owners[owners.length - 1];
+                break;
+            }
+        }
+        owners.pop();
+        if (numConfirmationsRequired > owners.length) {
+            changeRequirement(owners.length);
+        }
+    }
+
+    function changeRequirement(uint _required)
+        public
+        onlyWallet
+        validRequirement(owners.length, _required)
+    {
+        numConfirmationsRequired = _required;
     }
 }

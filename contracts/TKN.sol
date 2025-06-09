@@ -41,4 +41,8 @@ contract TKN is ERC20, AccessControl {
     require(!isBlacklisted(to), "TKN: recipient is blacklisted");
     return super.transferFrom(from, to, amount);
   }
+
+  function decimals() public pure override returns (uint8) {
+    return 2;
+  }
 }
