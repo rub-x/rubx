@@ -42,7 +42,7 @@ A secure multi-signature wallet implementation that requires multiple owner conf
 - Comprehensive input validation and access control
 
 
-### 2. TKN.sol
+### 2. RUBx.sol
 
 An TRC20 token contract with role-based access control and blacklisting functionality. This token implements additional security features beyond the standard TRC20 specification.
 
@@ -54,8 +54,8 @@ An TRC20 token contract with role-based access control and blacklisting function
 - **Transfer Restrictions**: Both sender and recipient blacklist checks
 
 #### Token Details
-- **Name**: TKN
-- **Symbol**: TKN
+- **Name**: RUBx
+- **Symbol**: RUBx
 - **Decimals**: 2 (custom implementation)
 - **License**: GPL-3.0
 

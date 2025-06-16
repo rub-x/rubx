@@ -5,10 +5,12 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
- * @title TKN
- * @notice TKN 
+ * @title RUBx
+ * @notice RUBx 
  */
-contract TKN is ERC20, AccessControl {
+contract RUBx is ERC20, AccessControl {
+
+  bool public lock = false;
 
   function MINTER_ROLE() public pure returns (bytes32) {
     return keccak256("MINTER_ROLE");
@@ -18,27 +20,46 @@ contract TKN is ERC20, AccessControl {
       return keccak256("BLACKLIST");
   }
 
+  function LOCK_ROLE() public pure returns (bytes32) {
+      return keccak256("LOCK_ROLE");
+  }
+
   function isBlacklisted(address account) public view returns (bool) {
     return hasRole(BLACKLIST(), account);
   }
 
-  constructor() ERC20("TKN", "TKN") {
+  modifier notBlacklisted(address to, address from) {
+    require(!isBlacklisted(to), "RUBx: recipient is blacklisted");
+    require(!isBlacklisted(from), "RUBx: sender is blacklisted");
+    _;
+  }
+
+  modifier notLocked() {
+    require(!lock, "RUBx: contract is locked");
+    _;
+  }
+
+  constructor() ERC20("RUBx", "RUBx") {
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }
 
-  function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE()) {
+  function setLock(bool _lock) external onlyRole(LOCK_ROLE()) {
+    lock = _lock;
+  }
+
+  function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE()) notLocked() {
     _mint(to, amount);
   }
   
-  function transfer(address to, uint256 amount) public virtual override returns (bool) {
-    require(!isBlacklisted(msg.sender), "TKN: sender is blacklisted");
-    require(!isBlacklisted(to), "TKN: recipient is blacklisted");
+  function burn(address from, uint256 amount) external onlyRole(MINTER_ROLE()) notLocked() {
+    _burn(from, amount);
+  }
+
+  function transfer(address to, uint256 amount) public virtual override notBlacklisted(to, msg.sender) notLocked() returns (bool) {
     return super.transfer(to, amount);
   }
   
-  function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool) {
-    require(!isBlacklisted(from), "TKN: sender is blacklisted");
-    require(!isBlacklisted(to), "TKN: recipient is blacklisted");
+  function transferFrom(address from, address to, uint256 amount) public virtual override notBlacklisted(to, from) notLocked() returns (bool) {
     return super.transferFrom(from, to, amount);
   }
 
