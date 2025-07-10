@@ -13,6 +13,9 @@ contract MultiSigWallet {
     event ConfirmTransaction(address indexed owner, uint256 indexed txIndex);
     event RevokeConfirmation(address indexed owner, uint256 indexed txIndex);
     event ExecuteTransaction(address indexed owner, uint256 indexed txIndex);
+    event OwnerAdded(address indexed owner);
+    event OwnerRemoved(address indexed owner);
+    event RequirementChanged(uint256 required);
 
     address[] public owners;
     mapping(address => bool) public isOwner;
@@ -207,28 +210,10 @@ contract MultiSigWallet {
     modifier validRequirement(uint ownerCount, uint _required) {
         if (_required > ownerCount
             || _required == 0
-            || ownerCount == 0)
+            || ownerCount == 0
+            || _required <= ownerCount / 2)
             revert("invalid requirement");
         _;
-    }
-
-    /// @dev Allows to replace an owner with a new owner.
-    /// @param owner Address of owner to be replaced.
-    /// @param owner Address of new owner.
-    function replaceOwner(address owner, address newOwner)
-        public
-        ownerExists(owner)
-        ownerDoesNotExist(newOwner)
-        onlyWallet
-    {
-        for (uint i = 0; i < owners.length; i++) {
-            if (owners[i] == owner) {
-                owners[i] = newOwner;
-                break;
-            }
-        }
-        isOwner[owner] = false;
-        isOwner[newOwner] = true;
     }
 
     /// @dev Allows to add a new owner. Transaction has to be sent by wallet.
@@ -242,6 +227,8 @@ contract MultiSigWallet {
     {
         isOwner[owner] = true;
         owners.push(owner);
+
+        emit OwnerAdded(owner);
     }
 
     /// @dev Allows to remove an owner. Transaction has to be sent by wallet.
@@ -262,6 +249,8 @@ contract MultiSigWallet {
         if (numConfirmationsRequired > owners.length) {
             changeRequirement(owners.length);
         }
+
+        emit OwnerRemoved(owner);
     }
 
     function changeRequirement(uint _required)
@@ -270,5 +259,7 @@ contract MultiSigWallet {
         validRequirement(owners.length, _required)
     {
         numConfirmationsRequired = _required;
+
+        emit RequirementChanged(_required);
     }
 }

@@ -12,6 +12,8 @@ contract RUBx is ERC20, AccessControl {
 
   bool public lock = false;
 
+  event LockSet(bool lock);
+
   function MINTER_ROLE() public pure returns (bytes32) {
     return keccak256("MINTER_ROLE");
   }
@@ -45,6 +47,8 @@ contract RUBx is ERC20, AccessControl {
 
   function setLock(bool _lock) external onlyRole(LOCK_ROLE()) {
     lock = _lock;
+
+    emit LockSet(_lock);
   }
 
   function mint(address to, uint256 amount) external onlyRole(MINTER_ROLE()) notLocked() {
