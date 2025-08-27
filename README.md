@@ -1,4 +1,4 @@
-# RTpay Smart Contracts
+# RUBx Smart Contracts
 
 This repository contains two main smart contracts: a comprehensive Multi-Signature Wallet and a custom TRC20 token with blacklisting functionality.
 
